@@ -21,4 +21,3 @@ help_text () {
 
 EOF
 }
-help_text

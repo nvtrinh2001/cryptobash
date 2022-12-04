@@ -1,0 +1,5 @@
+./components/api-handler.sh
+./data/
+./gnuplot-5.4.5/
+./gnuplot.tar.gz
+./.git/
