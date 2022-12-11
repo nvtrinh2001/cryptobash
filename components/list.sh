@@ -6,9 +6,6 @@ COINMARKETCAP_API_KEY=d11cf38c-97b0-4a07-87e9-4d6c22ed264a
 
 ########## CONSTANTS ##########
 
-# colored output
-# source: https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
-# shellcheck disable=SC2034
 red=$(tput setaf 1) # Error
 # shellcheck disable=SC2034
 green=$(tput setaf 2) # OK
@@ -23,25 +20,16 @@ reset=$(tput sgr0) # reset, clearing, back to default
 
 ########## VARIABLES ##########
 UNSPECIFIED=()  # this is the array of unspecified arguments
-DEBUG="false"   # for --debug argument;
-HELP="false"    # for --help argument;
-VERSION="false" # for --version argument;
 # shellcheck disable=SC2034
 DOONLYCLEANUP="false" # for --cleanup argument;
 # shellcheck disable=SC2034
 COUNTER=0 # this is a counter of arguments
 MYAPP=jq    # this package is required, a json parser
 MYAPP2=curl # this package is required
-# https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&convert=USD&limit=10
-# https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?slug=bitcoin&convert=VND
-URLPREFIX="https://"
 URLBASE="pro-api.coinmarketcap.com/"
 URLPOSTFIX="v1/cryptocurrency/"
-# URLBASEIP="104.17.137.178" # IP address of https://api.coinmarketcap.com from a tool like tor-resolve or http://www.dnsqueries.com/en/dns_lookup.php
 DATAURL=${URLPREFIX}${URLBASE}${URLPOSTFIX}
 JSONFILE="/tmp/${0##*/}.tmp.json"
-TORIFYCMD="torify "
-TORIFY="false"
 TOPDEFAULT=10   # default
 TOP=$TOPDEFAULT # init
 FIAT="USD"      # default fiat currency
@@ -61,7 +49,7 @@ VERBOSE="true"
 
 # usage
 function usage() {
-    echo "${0##*/}: Usage: ${bold}${0##*/} [--help] [--debug] [--version] [--verbose] [--torify]  ${reset}"
+    echo "${0##*/}: Usage: ${bold}${0##*/} [--help]  ${reset}"
     echo "${0##*/}:                    ${bold}[--top <NUMBER>]  [--depth <NUMBER>] ${reset}"
     echo "${0##*/}:                    ${bold}[--listbysymbols <CRYPTO1SYMBOL,CRYPTO2SYMBOL,ETC>]  ${reset}"
     echo "${0##*/}:                    ${bold}[--listbynames <CRYPTO1NAME,CRYPTO2NAME,ETC>]  ${reset}"
@@ -73,7 +61,6 @@ function usage() {
     echo "${0##*/}:          AUD, BRL, CAD, CHF, CLP, CNY, CZK, "
     echo "${0##*/}:          DKK, EUR, GBP, HKD, HUF, IDR, ILS, INR, JPY, KRW, MXN, MYR, NOK, NZD, VND, "
     echo "${0##*/}:          PHP, PKR, PLN, RUB, SEK, SGD, THB, TRY, TWD, ZAR."
-    echo "${0##*/}: ${0##*/} uses a temporary file $JSONFILE which gets automatically removed."
     echo "${0##*/}: Example: ${0##*/}       ...  prints top $TOPDEFAULT crypto currencies, "
     echo "${0##*/}:                              uses default USD for prices"
     echo "${0##*/}: Example: ${0##*/} -n 3  ...  prints market info of top 3 crypto currencies, "
@@ -99,9 +86,6 @@ function usage() {
     echo "${0##*/}:    HELP: Prints the help text and exits. [type: flag]"
     echo "${0##*/}: ${bold}--cleanup, -c${reset}"
     echo "${0##*/}:    DO-ONLY-CLEANUP: Performs only cleanup, then exits [type: flag]"
-    echo "${0##*/}: ${bold}--torify, -t${reset}"
-    echo "${0##*/}:    TORIFY: Request the data via Tor onion network [type: flag]"
-    echo "${0##*/}:    Was disabled in latest Coinmarketcap.com API."
     echo "${0##*/}: ${bold}--top, -n${reset}"
     echo "${0##*/}:    TOP: How many crypto currencies should be displayed [type: integer] [default: $TOP]"
     echo "${0##*/}: ${bold}--vnd, -vn${reset}"
@@ -123,7 +107,6 @@ function printArgs() {
     echo "${0##*/}: MYAPP.....................=$MYAPP"
     echo "${0##*/}: MYAPP2....................=$MYAPP2"
     echo "${0##*/}: DOONLYCLEANUP.............=$DOONLYCLEANUP"
-    echo "${0##*/}: TORIFY....................=$TORIFY"
     echo "${0##*/}: TOP.......................=$TOP"
     echo "${0##*/}: VND.......................=$VND"
     echo "${0##*/}: CCSYMBOLSLIST.............=$CCSYMBOLSLIST"
@@ -158,24 +141,6 @@ function controlBackslash() {
 }
 
 function printHeader() {
-    #         "name": "Bitcoin",
-    #         "symbol": "BTC",
-    #         "rank": "1",
-    #         "price_usd": "8294.96",
-    #         "price_btc": "1.0",
-    #         "24h_volume_usd": "3418410000.0",
-    #         "market_cap_usd": "138482076086",
-    #         "available_supply": "16694725.0",
-    #         "total_supply": "16694725.0",
-    #         "max_supply": "21000000.0",
-    #         "percent_change_1h": "0.14",
-    #         "percent_change_24h": "1.76",
-    #         "percent_change_7d": "17.49",
-    #         "last_updated": "1511350757"
-    #
-    #         "price_eur": "0.1718910529",
-    #         "24h_volume_eur": "6333068.4605",
-    #         "market_cap_eur": "1547019476.0"
 
     rank="Rank"
     symbol="Symbol"
@@ -185,28 +150,16 @@ function printHeader() {
     price_btc="BTC"
     percent_change_24h="24h-Change"
     percent_change_7d="7d-Change"
-    if [ "$VERBOSE" == "true" ]; then
-        a24h_volume="24h-Volume-$FIATUC"
-        available_supply="Available-Supply"
-        total_supply="Total-Supply"
-        max_supply="Max-Supply"
-        percent_change_1h="1h-Change"
-        # dont put anything like ${bold} ${reset} here, it confuses `column` later
-        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%17s\t%17s\t%17s\t%17s\t%17s\n" "$rank" "$symbol" "$name" "$price" "$percent_change_1h" "$percent_change_24h" "$percent_change_7d" "$a24h_volume" "$available_supply" "$total_supply" "$max_supply" "$market_cap"
-    else
-        # dont put anything like ${bold} ${reset} here, it confuses `column` later
-        printf "%s\t%s\t%s\t%s\t%s\t%s\t%17s\n" "$rank" "$symbol" "$name" "$price" "$percent_change_24h" "$percent_change_7d" "$market_cap"
-    fi
+    a24h_volume="24h-Volume-$FIATUC"
+    available_supply="Available-Supply"
+    total_supply="Total-Supply"
+    max_supply="Max-Supply"
+    percent_change_1h="1h-Change"
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%17s\t%17s\t%17s\t%17s\t%17s\n" "$rank" "$symbol" "$name" "$price" "$percent_change_1h" "$percent_change_24h" "$percent_change_7d" "$a24h_volume" "$available_supply" "$total_supply" "$max_supply" "$market_cap"
+   
 }
 
 function setSeperator() {
-    # The JSON is in UTF8 and uses LC_NUMERIC="en_US.UTF-8".
-    # That means that JSON has . as decimal seperator.
-    # Using these price strings will not work in other countries that use , as a decimal seperator
-    # We will check if printf "%f" 1.3 works. If so we use prices as is.
-    # If not than we will check if printf "%f" 1,3 works. If so we then substitute the dots (.) with commas (,) in the price strings.
-    # If both 1.3 and 1,3 fail in printf, LC_NUMERIC is changed to force dot (.) as seperator.
-
     if [ "$(printf '%3.1f' 1.3 2>/dev/null)" == "1.3" ]; then
         seperator="."
     elif [ "$(printf '%3.1f' 1,3 2>/dev/null)" == "1,3" ]; then
@@ -300,36 +253,31 @@ function processEntry() {
     #market_cap="${market_cap%\"}"
     #market_cap="${market_cap#\"}"
     [ $seperator == "," ] && market_cap=${market_cap//./,} # replace all dots
-    if [ "$VERBOSE" == "true" ]; then
-        a24h_volume=$(echo "$1" | jq ".quote.$FIATUC.volume_24h")
-        #a24h_volume="${a24h_volume%\"}"
-        #a24h_volume="${a24h_volume#\"}"
-        [ $seperator == "," ] && a24h_volume=${a24h_volume//./,} # replace all dots
+    a24h_volume=$(echo "$1" | jq ".quote.$FIATUC.volume_24h")
+    #a24h_volume="${a24h_volume%\"}"
+    #a24h_volume="${a24h_volume#\"}"
+    [ $seperator == "," ] && a24h_volume=${a24h_volume//./,} # replace all dots
+    
+    available_supply=$(echo "$1" | jq ".circulating_supply") # available_supply
+    #available_supply="${available_supply%\"}"
+    #available_supply="${available_supply#\"}"
+    [ $seperator == "," ] && available_supply=${available_supply//./,} # replace all dots
 
-        available_supply=$(echo "$1" | jq ".circulating_supply") # available_supply
-        #available_supply="${available_supply%\"}"
-        #available_supply="${available_supply#\"}"
-        [ $seperator == "," ] && available_supply=${available_supply//./,} # replace all dots
+    total_supply=$(echo "$1" | jq ".total_supply")
+    #total_supply="${total_supply%\"}"
+    #total_supply="${total_supply#\"}"
+    [ $seperator == "," ] && total_supply=${total_supply//./,} # replace all dots
 
-        total_supply=$(echo "$1" | jq ".total_supply")
-        #total_supply="${total_supply%\"}"
-        #total_supply="${total_supply#\"}"
-        [ $seperator == "," ] && total_supply=${total_supply//./,} # replace all dots
+    max_supply=$(echo "$1" | jq ".max_supply")
+    #max_supply="${max_supply%\"}"
+    #max_supply="${max_supply#\"}"
+    [ $seperator == "," ] && max_supply=${max_supply//./,} # replace all dots
 
-        max_supply=$(echo "$1" | jq ".max_supply")
-        #max_supply="${max_supply%\"}"
-        #max_supply="${max_supply#\"}"
-        [ $seperator == "," ] && max_supply=${max_supply//./,} # replace all dots
-
-        percent_change_1h=$(echo "$1" | jq ".quote.$FIATUC.percent_change_1h")
-        #percent_change_1h="${percent_change_1h%\"}"
-        #percent_change_1h="${percent_change_1h#\"}"
-        [ $seperator == "," ] && percent_change_1h=${percent_change_1h//./,} # replace all dots
-        printf "%d\t%s\t%s\t%'1.8f\t%+6.1f%%\t%+6.1f%%\t%+6.1f%%\t%'17.f\t%'17.f\t%'17.f\t%'17.f\t%'17.f\n" "$rank" "$symbol" "$name" "$price" "$percent_change_1h" "$percent_change_24h" "$percent_change_7d" "$a24h_volume" "$available_supply" "$total_supply" "$max_supply" "$market_cap" 2>/dev/null
-    else
-        printf "%d\t%s\t%s\t%'1.8f\t%+6.1f%%\t%+6.1f%%\t%'17.f\n" "$rank" "$symbol" "$name" "$price" "$percent_change_24h" "$percent_change_7d" "$market_cap" 2>/dev/null
-    fi
-
+    percent_change_1h=$(echo "$1" | jq ".quote.$FIATUC.percent_change_1h")
+    #percent_change_1h="${percent_change_1h%\"}"
+    #percent_change_1h="${percent_change_1h#\"}"
+    [ $seperator == "," ] && percent_change_1h=${percent_change_1h//./,} # replace all dots
+    printf "%d\t%s\t%s\t%'1.8f\t%+6.1f%%\t%+6.1f%%\t%+6.1f%%\t%'17.f\t%'17.f\t%'17.f\t%'17.f\t%'17.f\n" "$rank" "$symbol" "$name" "$price" "$percent_change_1h" "$percent_change_24h" "$percent_change_7d" "$a24h_volume" "$available_supply" "$total_supply" "$max_supply" "$market_cap" 2>/dev/null
     if [ "$useccsymbolslist" == "true" ]; then
         if [ "$MATCHED" -ge ${#CCSYMBOLSARRAY[@]} ]; then
             return "$ALLMATCHED" # stop scanning, all symbols have been matched
@@ -342,29 +290,12 @@ function processEntry() {
  ########## Main ##########
 
 function main() {
-    if [ "$COINMARKETCAP_API_KEY" == "" ]; then
-        echo "${0##*/}: ${red}${bold}Coinmarketcap-API-key missing.${reset} Global environment variable \"COINMARKETCAP_API_KEY\" is not set."
-        echo "${0##*/}: Go to https://coinmarketcap.com and get your personal API key. Then assign it to environment variable \"COINMARKETCAP_API_KEY\"."
-        exit 13
-    fi
-    # process arguments
-    # source: https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
     while [[ $# -gt 0 ]]; do
         key="${1,,}" # lowercase $1
 
         case $key in
         h | -h | --h | help | -help | --help | -help* | --help*)
             HELP="true"
-            ;;
-       
-        cleanup | -c | --c | clean | -clean | --clean | -clean* | --clean*)
-            DOONLYCLEANUP="true"
-            ;;
-        torify | t | tor | -torify | -t | -tor | --torify | --t | --tor)
-            TORIFY="true"
-            echo "${0##*/}: ${red}${bold}This feature has been disabled by the API. It requires a captcha. Sorry.${reset}"
-            echo "${0##*/}: ${red}${bold}TOR use no longer allowed in the new API version.${reset}"
-            exit 33
             ;;
         top | n | number | -top | -n | -number | --top | --n | --number)
             if ! [[ "$2" =~ ^[0-9]+$ ]]; then
@@ -432,11 +363,6 @@ function main() {
     CONVERT="?convert=${FIATUC}"
     [ "$DEBUG" == "true" ] && echo "${0##*/}: ${green}${bold}Converting to fiat $FIATUC.${reset}"
 
-    if [ "$TORIFY" == "true" ]; then
-        TORIFYCMD="torify "
-    else
-        TORIFYCMD=""
-    fi
     if [ "$TOP" -eq 0 ]; then
         echo "${0##*/}: ${red}${bold}Top $TOP (zero) is not allowed.${reset}"
         usage
@@ -623,6 +549,3 @@ function main() {
     echo "Market data source: ${yellow}https://www.coinmarketcap.com${reset} on $(date)"
 } # function main
 
-main "$@"
-
-# end of script
