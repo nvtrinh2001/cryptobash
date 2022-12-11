@@ -623,6 +623,4 @@ function main() {
     echo "Market data source: ${yellow}https://www.coinmarketcap.com${reset} on $(date)"
 } # function main
 
-main "$@"
-
 # end of script

@@ -2,7 +2,7 @@
 
 cli=cryptobash
 
-help_text () {
+help() {
 	while read -r line; do
 		printf "%s\n" "$line"
 	done <<-EOF

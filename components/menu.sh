@@ -14,8 +14,6 @@ yellowprint() { printf "${YELLOW}%s${RESET}\n" "$1"; }
 magentaprint() { printf "${MAGENTA}%s${RESET}\n" "$1"; }
 cyanprint() { printf "${CYAN}%s${RESET}\n" "$1"; }
 
-fn_goodafternoon() { echo; echo "Good afternoon."; }
-fn_goodmorning() { echo; echo "Good morning."; }
 fn_bye() { echo "Bye bye."; exit 0; }
 fn_fail() { echo "Wrong option." exit 1; }
 

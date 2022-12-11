@@ -1,11 +1,5 @@
 #!/bin/bash
 
-export COINMARKETCAP_API_KEY="5438a0bf-1c94-4a6c-96a6-30633aaae67a"
-
-if [[ "$(awk -F= '$1 == "ID_LIKE" { print $2 }' /etc/os-release)" == "debian" ]]; then
-sudo apt install jq
-sudo apt install curl
-fi
 ########## CONSTANTS ##########
 
 red=$(tput setaf 1) 
@@ -63,7 +57,7 @@ function process() {
     return 1
 }
 
-function DisplayTop10() {
+function display() {
     FIATUC=${FIAT^^} 
     CONVERT="?convert=${FIATUC}"
 
