@@ -64,6 +64,10 @@ function search()
     CONVERT="?convert=${FIATUC}"
     echo 'Input a cryptocurrency: '
     read CCNAMESLIST
+    echo 'Input a fiat: '
+    read FIAT
+    FIATUC=${FIAT^^} 
+    CONVERT="?convert=${FIATUC}"
     useccnameslist="false"
     if [ "$CCNAMESLIST" == "" ]; then
         useccnameslist="false"
