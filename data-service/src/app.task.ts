@@ -24,7 +24,7 @@ export class AppTask implements OnModuleInit {
     console.log('update cryto data');
     console.log('importing');
     const numberOfDays = [7, 14, 30];
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < 8; i++) {
       for (let j = 0; j < numberOfDays.length; j++) {
         const coinId = data[i].id;
         //const currentcy = 'usd';
