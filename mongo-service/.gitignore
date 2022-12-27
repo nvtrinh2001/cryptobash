@@ -1,0 +1,4 @@
+.env
+mongodb
+mongoconfig
+mongo-entrypoint
