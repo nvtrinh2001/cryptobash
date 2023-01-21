@@ -4,9 +4,8 @@
 source ./components/help.sh
 source ./components/menu.sh
 source ./components/graph.sh
-source ./components/list.sh
 source ./components/search.sh
-source ./components/display.sh
+source ./components/list.sh
 source ./components/dependencies.sh
 
 # Define the COINMARKETCAP API key
@@ -17,7 +16,7 @@ if [[ -z $1 ]]; then
 else
   case "$1" in
     list|l) 
-      display "$@"
+      list "$@"
     ;;
     search|s) 
       search "$@"
@@ -29,7 +28,7 @@ else
       help
     ;;
     *) 
-      echo "Option not found! Try again.\n"
+      echo "Option not found! Try again."
       help 
     ;;
   esac
