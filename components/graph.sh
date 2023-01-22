@@ -60,24 +60,43 @@ graph() {
     rm /tmp/graph-data*
   fi
 
+  isInDB=0
+  if [[ $DAYS == 7 ]] || [[ $DAYS == 14 ]] || [[ $DAYS == 30 ]]; then
+  isInDB=1 
+  fi
+
   # query data
-  echo -n "be patient ..."
+  if [[ $isInDB == 1 ]]; then
+    # query data
+    echo -e "Connecting to mongodb ...\n"
+  
+    for index in ${!crypto_array[@]}
+    do
+      mongoexport --collection=cryptodatas --db=crypto --fields=prices --query='{"crytoId": "'${crypto_array[$index]}'", "numberOfDay": '$DAYS'}' --out=/tmp/cryptobash"$index".json
+      [[ -s /tmp/cryptobash"$index".json ]] || isInDB=0
+    done
+    [[ $isInDB == 1 ]] || echo -e -n "\nCannot find cryptocurrencies in local database!\n"
+  fi
+  
+  if [[ $isInDB == 0 ]]; then
+    echo -n -e "\nFetching data using CoinGecko API ..."
 
-  for index in ${!crypto_array[@]}
-  do
-    curl -X 'GET' -s 'https://api.coingecko.com/api/v3/coins/'${crypto_array[$index]}'/market_chart?vs_currency='$FIAT'&days='$DAYS'&interval=hourly' -H 'accept: application/json' > /tmp/cryptobash"$index".json
+    for index in ${!crypto_array[@]}
+    do
+      curl -X 'GET' -s 'https://api.coingecko.com/api/v3/coins/'${crypto_array[$index]}'/market_chart?vs_currency='$FIAT'&days='$DAYS'&interval=hourly' -H 'accept: application/json' > /tmp/cryptobash"$index".json
 
-    errorstatus=$(grep error /tmp/cryptobash$index.json)
+      errorstatus=$(grep error /tmp/cryptobash$index.json)
    
-    if [[ ! -z "$errorstatus" ]]; then
-      echo ""
-      echo "API call failed. Check the name of your crypto currency. Make sure the name is listed on CoinGecko."
-      exit 
-    fi
+      if [[ ! -z "$errorstatus" ]]; then
+        echo "\nAPI call failed. Check the name of your crypto currency. Make sure the name is listed on CoinGecko."
+        exit 
+      fi
 
-  done
-
+    done
+  fi
+  
   # modify data
+  echo -n -e "\nProcessing data, be patient ...\n"
   len=$(jq '.prices | length' /tmp/cryptobash0.json)
   for (( i = 0; i < $len; i++ )); do
     raw_timestamp=$(jq ".prices[$i][0]" /tmp/cryptobash0.json)
