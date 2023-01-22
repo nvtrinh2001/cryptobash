@@ -1,56 +1,49 @@
 #!/bin/bash
 
-DEFAULTDAYS=7
-DEFAULTFIAT=usd
+graph-submenu() {
+    echo -ne "
+$(blueprint 'GRAPH MENU')
+$(greenprint '1)') draw a graph
+$(magentaprint '2)') go back to MAIN MENU
+$(redprint '0)') exit
+Choose an option:  "
+    read -r ans
+    case $ans in
+    1)
+        graph
+        graph-submenu
+        ;;
+    2)
+        mainmenu
+        ;;
+    0)
+        fn_bye
+        ;;
+    *)
+        fn_fail
+        ;;
+    esac
+}
 
 graph() {
-
-  # no argument
-  if [[ -z $2 ]]; then
-    echo "Expect at least one crypto currency as an argument. Try again!"
-    exit 1
-  fi
-  # get name of the crypto
-  CRYPTO_NAME=$3
-  shift
-  shift
-  IFS=',' read -r -a crypto_array <<< "$CRYPTO_NAME"
-
-  # Load the user defined parameters
-  while [[ $# > 1 ]]
-  do
-    case "$2" in
-
-      -d|--days)
-        DAYS="$3"
-        shift
-      ;;
-
-      -f|--fiat)
-        FIAT="$3"
-        shift
-      ;;
-    
-      --help|*)
-        echo "Usage:"
-        echo "    Display a price graph of a given crypto currency in an amount of time"
-        echo "    cryptobash graph -n|--name [CRYPTO_NAME1,CRYPTO_NAME2,...] [OPTIONS]"
-        echo "    "
-        echo "    -d|--days: specify number of days"
-        echo "    -f|--fiat: specify a fiat currency. For example: usd, eur, vnd, etc."
-        echo "    -h|--help: open this message"
-        exit 1
-      ;;
-    esac
-    shift
+  echo -ne "\nInput (a) cryptocurrency name(s):  "
+  read -r CRYPTO_NAME
+  while [[ -z $CRYPTO_NAME ]]; do
+    echo "A name is required. Try again."
+    echo -ne "\nInput (a) cryptocurrency name(s):  "
+    read -r CRYPTO_NAME
   done
 
-  if [[ -z $DAYS ]]; then
-    DAYS=$DEFAULTDAYS
-  fi
-  if [[ -s $FIAT ]]; then
-    FIAT=$DEFAULTFIAT
-  fi
+  echo -ne "\nInput a fiat currency (default: USD):   "
+  read -r FIAT
+  [[ -z $FIAT ]] && FIAT='usd' && echo -e "Using default value: USD"
+
+  echo -ne "\nInput a number of days (default: 7):  "
+  read -r DAYS
+  [[ -z $DAYS ]] && DAYS=7 && echo -e "Using default value: 7 days"
+
+  # get name of the crypto
+  IFS=', ' read -r -a crypto_array <<< "$CRYPTO_NAME"
 
   # remove old files
   if compgen -G "/tmp/cryptobash*" > /dev/null; then
@@ -68,7 +61,7 @@ graph() {
   # query data
   if [[ $isInDB == 1 ]]; then
     # query data
-    echo -e "Connecting to mongodb ...\n"
+    echo -e "\nConnecting to mongodb ...\n"
   
     for index in ${!crypto_array[@]}
     do
@@ -88,7 +81,7 @@ graph() {
       errorstatus=$(grep error /tmp/cryptobash$index.json)
    
       if [[ ! -z "$errorstatus" ]]; then
-        echo "\nAPI call failed. Check the name of your crypto currency. Make sure the name is listed on CoinGecko."
+        echo -e "\nAPI call failed. Check the name of your crypto currency. Make sure the name is listed on CoinGecko."
         exit 
       fi
 
@@ -136,11 +129,12 @@ set xdata time
 set datafile separator ","
 set timefmt "%Y-%m-%d %H:%M"
 set format x "%m-%d\n%Y"
+set ylabel "Price ($FIAT)"
+set xlabel "Date"
 $PLOT_STR
 EOFMarker
 
 echo -e -n "\b\b\b\b\b\b\b\b\b\b\b\b\b\b              \b\b\b\b\b\b\b\b\b\b\b\b\b\b" # erase "be patient ..."
-echo "Completed! You can now see the graph displayed on your machine."
+echo -e "\nCompleted! You can now see the graph displayed on your machine."
 }
-
 

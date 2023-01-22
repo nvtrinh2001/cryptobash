@@ -1,80 +1,52 @@
 #!/bin/bash
-########## CONSTANTS ##########
-
-red=$(tput setaf 1) 
-green=$(tput setaf 2) 
-yellow=$(tput setaf 3) 
-bold=$(tput bold) 
-rev=$(tput rev) 
-reset=$(tput sgr0) 
-
-########## VARIABLES ##########
-URLPREFIX="https://"
-URLBASE="pro-api.coinmarketcap.com/"
-URLPOSTFIX="v1/cryptocurrency/"
-DATAURL=${URLPREFIX}${URLBASE}${URLPOSTFIX}
-JSONFILE="/tmp/${0##*/}.tmp.json"
-TOPDEFAULT=10   
-TOP=$TOPDEFAULT 
-FIAT="USD"      
-CCNAMESARRAY=()
-CCNAMESLIST=""
 
 ########## FUNCTIONS ##########
-
-function printHeader() {
-    rank="Rank"
-    symbol="Symbol"
-    name="Name"
-    price="$FIATUC"
-    market_cap="Market-cap-$FIATUC"
-    price_btc="BTC"
-    percent_change_24h="24h-Change"
-    percent_change_7d="7d-Change"
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%17s\n" "$rank" "$symbol" "$name" "$price" "$percent_change_24h" "$percent_change_7d" "$market_cap"
-}
-
-function process() {
-    symbol=$(echo "$1" | jq ".symbol")
-    symbol="${symbol%\"}"
-    symbol="${symbol#\"}"
-
-    rank=$(echo "$1" | jq ".cmc_rank")
-
-    name=$(echo "$1" | jq ".name")
-    name="${name%\"}" 
-    name="${name#\"}" 
-    name=$(tr "[:blank:]" " " <<<$name | tr -s " " | tr " " "-")
-
-    price=$(echo "$1" | jq ".quote.$FIATUC.price")
-    price_btc="---"
-
-    percent_change_24h=$(echo "$1" | jq ".quote.$FIATUC.percent_change_24h")
-    percent_change_7d=$(echo "$1" | jq ".quote.$FIATUC.percent_change_7d")
-
-    market_cap=$(echo "$1" | jq ".quote.$FIATUC.market_cap")
-    printf "%d\t%s\t%s\t%'1.8f\t%+6.1f%%\t%+6.1f%%\t%'17.f\n" "$rank" "$symbol" "$name" "$price" "$percent_change_24h" "$percent_change_7d" "$market_cap" 2>/dev/null
-
-    return 1
+search-submenu() {
+    echo -ne "
+$(blueprint 'SEARCH MENU')
+$(greenprint '1)') search for specific cryptocurrencies
+$(magentaprint '2)') go back to MAIN MENU
+$(redprint '0)') exit
+Choose an option:  "
+    read -r ans
+    case $ans in
+    1)
+        search
+        search-submenu
+        ;;
+    2)
+        mainmenu
+        ;;
+    0)
+        fn_bye
+        ;;
+    *)
+        fn_fail
+        ;;
+    esac
 }
 
 function search()
 {
-    FIATUC=${FIAT^^} 
-    CONVERT="?convert=${FIATUC}"
-    echo 'Input a cryptocurrency: '
-    read CCNAMESLIST
-    echo 'Input a fiat: '
-    read FIAT
+    echo -ne "\nInput (a) cryptocurrency name(s):  "
+    read -r CCNAMESLIST
+    while [[ -z $CCNAMESLIST ]]; do
+      echo "A name is required. Try again."
+      echo -ne "\nInput (a) cryptocurrency name(s):  "
+      read -r CCNAMESLIST
+    done
+
+    echo -ne "\nInput a fiat currency (default: USD):   "
+    read -r FIAT
+    [[ -z $FIAT ]] && FIAT='USD' && echo -e "Using default value: USD"
+
     FIATUC=${FIAT^^} 
     CONVERT="?convert=${FIATUC}"
     useccnameslist="false"
-    if [ "$CCNAMESLIST" == "" ]; then
-        useccnameslist="false"
-    else
-        IFS=', ' read -r -a CCNAMESARRAY <<<"${CCNAMESLIST,,}" 
-        useccnameslist="true"
-    fi
+    
+    IFS=', ' read -r -a CCNAMESARRAY <<<"${CCNAMESLIST,,}" 
+    useccnameslist="true"
+    
     if [ "$useccnameslist" == "true" ]; then
         LIMIT=""
         TOP=0
@@ -104,7 +76,7 @@ function search()
 
     ii=0
     morelines="true"
-    echo -e -n "be patient ..."
+    echo -e -n "\nbe patient ..."
     table=$(while [ ${morelines} == "true" ]; do
         if [ "$useccnameslist" == "true" ]; then
             ret=$(jq <"${JSONFILE}" ".[$ii]")

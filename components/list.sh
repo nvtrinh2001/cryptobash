@@ -1,69 +1,46 @@
 #!/bin/bash
 
-########## CONSTANTS ##########
-
-red=$(tput setaf 1) 
-green=$(tput setaf 2) 
-yellow=$(tput setaf 3) 
-bold=$(tput bold) 
-rev=$(tput rev) 
-reset=$(tput sgr0) 
-
-########## VARIABLES ##########  
-URLPREFIX="https://"
-URLBASE="pro-api.coinmarketcap.com/"
-URLPOSTFIX="v1/cryptocurrency/"
-DATAURL=${URLPREFIX}${URLBASE}${URLPOSTFIX}
-JSONFILE="/tmp/${0##*/}.tmp.json"
-TOPDEFAULT=10   
-TOP=$TOPDEFAULT 
-FIAT="USD"      
-
 ########## FUNCTIONS ##########
-
-function printHeader() {
-    rank="Rank"
-    symbol="Symbol"
-    name="Name"
-    price="$FIATUC"
-    market_cap="Market-cap-$FIATUC"
-    price_btc="BTC"
-    percent_change_24h="24h-Change"
-    percent_change_7d="7d-Change"
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%17s\n" "$rank" "$symbol" "$name" "$price" "$percent_change_24h" "$percent_change_7d" "$market_cap"
-}
-
-function process() {
-    symbol=$(echo "$1" | jq ".symbol")
-    symbol="${symbol%\"}"
-    symbol="${symbol#\"}"
-
-    rank=$(echo "$1" | jq ".cmc_rank")
-
-    name=$(echo "$1" | jq ".name")
-    name="${name%\"}" 
-    name="${name#\"}" 
-    name=$(tr "[:blank:]" " " <<<$name | tr -s " " | tr " " "-")
-
-    price=$(echo "$1" | jq ".quote.$FIATUC.price")
-    price_btc="---"
-
-    percent_change_24h=$(echo "$1" | jq ".quote.$FIATUC.percent_change_24h")
-    percent_change_7d=$(echo "$1" | jq ".quote.$FIATUC.percent_change_7d")
-
-    market_cap=$(echo "$1" | jq ".quote.$FIATUC.market_cap")
-    printf "%d\t%s\t%s\t%'1.8f\t%+6.1f%%\t%+6.1f%%\t%'17.f\n" "$rank" "$symbol" "$name" "$price" "$percent_change_24h" "$percent_change_7d" "$market_cap" 2>/dev/null
-
-    return 1
+list-submenu() {
+    echo -ne "
+$(blueprint 'LISTING MENU')
+$(greenprint '1)') list top cryptocurrencies
+$(magentaprint '2)') go back to MAIN MENU
+$(redprint '0)') exit
+Choose an option:  "
+    read -r ans
+    case $ans in
+    1)
+        list 
+        list-submenu
+        ;;
+    2)
+        mainmenu
+        ;;
+    0)
+        fn_bye
+        ;;
+    *)
+        fn_fail
+        ;;
+    esac
 }
 
 function list() {
+    echo -ne "\nInput a fiat currency (default: USD):   "
+    read -r FIAT
+    [[ -z $FIAT ]] && FIAT='USD' && echo -e "Using default value: USD"
+
+    echo -ne "\nInput the number of top cryptocurrencies (default: 10):  "
+    read -r TOP
+    [[ -z $TOP ]] && TOP=10 && echo -e "Using default value: top 10\n"
+  
     FIATUC=${FIAT^^} 
     CONVERT="?convert=${FIATUC}"
 
     LIMIT="&limit=${TOP}"
     if [ $TOP -gt $TOPDEFAULT ]; then
-        echo -n "be patient ..."
+        echo -ne "\nbe patient ..."
     fi
         
     curl -H "X-CMC_PRO_API_KEY: $COINMARKETCAP_API_KEY" -H "Accept: application/json" -s "${DATAURL}listings/latest${CONVERT}${LIMIT}&start=1" >"${JSONFILE}"
