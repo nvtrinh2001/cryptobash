@@ -65,7 +65,7 @@ graph() {
   
     for index in ${!crypto_array[@]}
     do
-      mongoexport --collection=cryptodatas --db=crypto --fields=prices --query='{"crytoId": "'${crypto_array[$index]}'", "numberOfDay": '$DAYS'}' --out=/tmp/cryptobash"$index".json
+      mongoexport --collection=cryptodatas --db=crypto --fields=prices --sort='{time: -1}' --limit=1 --query='{"crytoId": "'${crypto_array[$index]}'", "numberOfDay": '$DAYS'}' --out=/tmp/cryptobash"$index".json
       [[ -s /tmp/cryptobash"$index".json ]] || isInDB=0
     done
     [[ $isInDB == 1 ]] || echo -e -n "\nCannot find cryptocurrencies in local database!\n"
@@ -97,6 +97,7 @@ graph() {
     timestamp=$(date -d @$(expr $raw_timestamp / 1000) "+%Y-%m-%d %H:%M")
     echo "$timestamp,$price" >> /tmp/graph-data0.dat
   done
+  echo "Finished 2 first collumns"
   
   for j in ${!crypto_array[@]}
   do
@@ -108,11 +109,14 @@ graph() {
       done
     fi
   done
+  echo "Finished getting prices from others"
+
   if [[ -e /tmp/graph-data1.dat ]]; then
     paste -d ',' /tmp/graph-data0.dat /tmp/graph-data[1-9]*.dat > /tmp/graph-data.dat
   else
     mv /tmp/graph-data0.dat /tmp/graph-data.dat
   fi
+  echo "Finished getting data"
 
   # display using gnuplot
   field=2
@@ -124,6 +128,7 @@ graph() {
     fi
   done
 
+  echo "Start drawing ..."
 gnuplot --persist <<-EOFMarker
 set xdata time
 set datafile separator ","
