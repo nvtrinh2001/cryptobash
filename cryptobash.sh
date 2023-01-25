@@ -7,6 +7,7 @@ source ./components/graph.sh
 source ./components/search.sh
 source ./components/list.sh
 source ./components/dependencies.sh
+source ./components/predict.sh
 
 # Define the COINMARKETCAP API key
 COINMARKETCAP_API_KEY=12e76001-8ae7-4e49-8d38-40b20bbe6846
@@ -37,7 +38,7 @@ Choose an option:  "
         mainmenu
         ;;
     4)
-        predict
+        predict-submenu
         mainmenu
         ;;
     5)

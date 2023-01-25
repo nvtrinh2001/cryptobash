@@ -92,9 +92,8 @@ graph() {
   echo -n -e "\nProcessing data, be patient ...\n"
   len=$(jq '.prices | length' /tmp/cryptobash0.json)
   for (( i = 0; i < $len; i++ )); do
-    raw_timestamp=$(jq ".prices[$i][0]" /tmp/cryptobash0.json)
+    timestamp=$(expr $(jq ".prices[$i][0]" /tmp/cryptobash0.json) / 1000)
     price=$(jq ".prices[$i][1]" /tmp/cryptobash0.json)
-    timestamp=$(date -d @$(expr $raw_timestamp / 1000) "+%Y-%m-%d %H:%M")
     echo "$timestamp,$price" >> /tmp/graph-data0.dat
   done
   echo "Finished 2 first collumns"
@@ -132,9 +131,9 @@ graph() {
 gnuplot --persist <<-EOFMarker
 set xdata time
 set datafile separator ","
-set timefmt "%Y-%m-%d %H:%M"
+set timefmt "%s"
 set format x "%m-%d\n%Y"
-set ylabel "Price ($FIAT)"
+set ylabel "Price (${FIAT^^})"
 set xlabel "Date"
 $PLOT_STR
 EOFMarker
