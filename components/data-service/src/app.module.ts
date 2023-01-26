@@ -19,8 +19,8 @@ const ENV = process.env.NODE_ENV;
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('DATABASE_URI'),
         dbName: configService.get<string>('DATABASE_DB'),
-        // useNewUrlParser: true,
-        // useUnfiedTopology: true,
+        //useNewUrlParser: true,
+        //useUnfiedTopology: true,
       }),
       inject: [ConfigService],
     }),

@@ -29,17 +29,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
             message: 'success',
             data: data,
           };
-        }
-        if (
-          request.method === 'GET' &&
-          context.getClass().name == 'WeatherController' &&
-          context.getHandler().name == 'findTime'
-        ) {
-          return {
-            statusCode: 200,
-            message: 'success',
-            data: data.data,
-          };
         } else {
           return {
             statusCode: 200,

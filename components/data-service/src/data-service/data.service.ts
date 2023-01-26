@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CryptoData, CryptoDataDocument } from './schema/data.schema';
 import { CreateCryptoDataDto } from './dto/create-data.dto';
+import { QueryDataDto } from './dto/query-data.dto';
 
 @Injectable()
 export class DataService {
@@ -18,16 +19,32 @@ export class DataService {
       ...createCryptoData,
     }).save();
   }
-  async findOneNearest(
-    crytoName: string,
-    numberOfDay: number,
-  ): Promise<CryptoData> {
+  async findOneNearest(query: QueryDataDto): Promise<CryptoData> {
+    console.log('querying...');
+    console.log(query);
     const result = await this.model
       .find({
-        cryptoId: crytoName,
-        numberOfDay: numberOfDay,
+        crytoId: query.crytoName,
       })
-      .sort({ time: -1 });
-    return result[0];
+      .exec();
+    console.log(result);
+    let index = 0;
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].numberOfDay == query.numberOfDay) {
+        index = i;
+      }
+    }
+    //console.log(result);
+    return result[index];
+  }
+  async update(
+    id: string,
+    updateData: CreateCryptoDataDto,
+  ): Promise<CryptoData> {
+    return await this.model.findByIdAndUpdate(id, updateData).exec();
+  }
+
+  async delete(id: string): Promise<any> {
+    return await this.model.findByIdAndDelete(id).exec();
   }
 }

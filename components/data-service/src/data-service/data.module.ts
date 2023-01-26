@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { DataService } from './data.service';
-//import { dataController } from './data.controller';
+import { DataController } from './data.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CryptoData, CryptoDataSchema } from './schema/data.schema';
 
 @Module({
-  //controllers: [dataController],
+  controllers: [DataController],
   providers: [DataService],
   imports: [
     MongooseModule.forFeature([
