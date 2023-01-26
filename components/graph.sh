@@ -89,14 +89,13 @@ graph() {
   fi
   
   # modify data
-  echo -n -e "\nProcessing data, be patient ...\n"
+  echo -n -e "\nProcessing data, be patient ..."
   len=$(jq '.prices | length' /tmp/cryptobash0.json)
   for (( i = 0; i < $len; i++ )); do
     timestamp=$(expr $(jq ".prices[$i][0]" /tmp/cryptobash0.json) / 1000)
     price=$(jq ".prices[$i][1]" /tmp/cryptobash0.json)
     echo "$timestamp,$price" >> /tmp/graph-data0.dat
   done
-  echo "Finished 2 first collumns"
   
   for j in ${!crypto_array[@]}
   do
@@ -108,14 +107,12 @@ graph() {
       done
     fi
   done
-  echo "Finished getting prices from others"
 
   if [[ -e /tmp/graph-data1.dat ]]; then
     paste -d ',' /tmp/graph-data0.dat /tmp/graph-data[1-9]*.dat > /tmp/graph-data.dat
   else
     mv /tmp/graph-data0.dat /tmp/graph-data.dat
   fi
-  echo "Finished getting data"
 
   # display using gnuplot
   field=2
@@ -127,7 +124,6 @@ graph() {
     fi
   done
 
-  echo "Start drawing ..."
 gnuplot --persist <<-EOFMarker
 set xdata time
 set datafile separator ","
@@ -138,7 +134,7 @@ set xlabel "Date"
 $PLOT_STR
 EOFMarker
 
-echo -e -n "\b\b\b\b\b\b\b\b\b\b\b\b\b\b              \b\b\b\b\b\b\b\b\b\b\b\b\b\b" # erase "be patient ..."
-echo -e "\nCompleted! You can now see the graph displayed on your machine."
+echo -e -n "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b                   \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" # erase "be patient ..."
+echo -e "Completed! You can now see the graph displayed on your machine."
 }
 

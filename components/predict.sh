@@ -43,13 +43,13 @@ predict() {
   echo COIN_ID=${COIN_ID^^} > ./components/predict/.env
   echo HOURS=$HOURS >> ./components/predict/.env
 
+  echo -ne "be patient ..."
   python3 ./components/predict/predictive-model.py > /dev/null 2> /dev/null
   python3 ./components/predict/main.py > /dev/null 2> /dev/null
 
   # display using gnuplot
   PLOT_STR="plot \"/var/tmp/actual-data.txt\" u 1:2 with lines title 'Actual ${CRYPTO_NAME^} Price', \"/var/tmp/predicted-data.txt\" u 1:2 with lines title 'Predicted ${CRYPTO_NAME^} Price'"
 
-  echo -ne "be patient ..."
 gnuplot --persist <<-EOFMarker
 set xdata time
 set datafile separator ","
