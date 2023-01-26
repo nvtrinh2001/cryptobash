@@ -1,23 +1,20 @@
 #!/bin/bash
 
-cli=cryptobash
-
-help_text () {
+help() {
 	while read -r line; do
 		printf "%s\n" "$line"
 	done <<-EOF
 	
 	Usage:
-	  	$cli list [OPTIONS]		list a number of cryptocurrencies (Default: 10)
-	  	$cli search [OPTIONS]		search for a specific cryptocurrencies
-	  	$cli graph [OPTIONS]		display a graph using received data
-	  	$cli predict [OPTIONS]		make a prediction based on current data
-	  	$cli clear			delete all data in data folder
-	  	$cli update			fetch update from github
+	  	list        list a number of cryptocurrencies 
+	  	search      search for a specific cryptocurrencies
+	  	graph       display a graph using received data
+	  	predict     make a prediction based on current data
+	  	update      fetch update from github
 	
 	Options:
-	  	-v print version number
-	  	-h show helptext
+	  	-v          print version number
+	  	-h          show helptext
 
 EOF
 }

@@ -2,83 +2,47 @@
 
 # source components
 source ./components/help.sh
-source ./components/menu.sh
+source ./components/helper.sh
 source ./components/graph.sh
+source ./components/search.sh
 source ./components/list.sh
+source ./components/dependencies.sh
+source ./components/predict.sh
 
 # Define the COINMARKETCAP API key
 COINMARKETCAP_API_KEY=12e76001-8ae7-4e49-8d38-40b20bbe6846
-
-# Methods
-sub-submenu() {
-    echo -ne "
-$(yellowprint 'SUB-SUBMENU')
-$(greenprint '1)') GOOD MORNING
-$(greenprint '2)') GOOD AFTERNOON
-$(blueprint '3)') Go Back to SUBMENU
-$(magentaprint '4)') Go Back to MAIN MENU
-$(redprint '0)') Exit
-Choose an option:  "
-    read -r ans
-    case $ans in
-    1)
-        fn_goodmorning
-        sub-submenu
-        ;;
-    2)
-        fn_goodafternoon
-        sub-submenu
-        ;;
-    3)
-        submenu
-        ;;
-    4)
-        mainmenu
-        ;;
-    0)
-        fn_bye
-        ;;
-    *)
-        fn_fail
-        ;;
-    esac
-}
-
-submenu() {
-    echo -ne "
-$(blueprint 'CMD1 SUBMENU')
-$(greenprint '1)') SUBCMD1
-$(magentaprint '2)') Go Back to Main Menu
-$(redprint '0)') Exit
-Choose an option:  "
-    read -r ans
-    case $ans in
-    1)
-        sub-submenu
-        submenu
-        ;;
-    2)
-        mainmenu
-        ;;
-    0)
-        fn_bye
-        ;;
-    *)
-        fn_fail
-        ;;
-    esac
-}
+cli=cryptobash
 
 mainmenu() {
     echo -ne "
 $(magentaprint 'MAIN MENU')
-$(greenprint '1)') Discover
-$(redprint '0)') Exit
+$(greenprint '1)') list 
+$(blueprint '2)') search 
+$(yellowprint '3)') graph 
+$(magentaprint '4)') predict
+$(cyanprint '5)') help
+$(redprint '0)') exit
 Choose an option:  "
     read -r ans
     case $ans in
     1)
-        submenu
+        list-submenu
+        mainmenu
+        ;;
+    2)
+        search-submenu
+        mainmenu
+        ;;
+    3)
+        graph-submenu
+        mainmenu
+        ;;
+    4)
+        predict-submenu
+        mainmenu
+        ;;
+    5)
+        help
         mainmenu
         ;;
     0)
@@ -86,6 +50,7 @@ Choose an option:  "
         ;;
     *)
         fn_fail
+        help
         ;;
     esac
 }

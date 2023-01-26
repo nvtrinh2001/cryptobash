@@ -1,3 +1,0 @@
-qtterminal/qrc_QtGnuplotResource.o: qtterminal/qrc_QtGnuplotResource.cpp \
- /usr/include/stdc-predef.h
-/usr/include/stdc-predef.h:
