@@ -11,16 +11,16 @@ export class Element {
 @Schema()
 export class CryptoData {
   @Prop()
-  crytoId: string;
+  crytoId: string; // name of the crypto currency
 
   @Prop()
-  time: number;
+  time: number; // time of the record
 
   @Prop()
-  numberOfDay: number;
+  numberOfDay: number; // the number of days until now
 
   @Prop()
-  prices: Element[];
+  prices: Element[]; // the data of prices for each currency
 }
 
 export const CryptoDataSchema = SchemaFactory.createForClass(CryptoData);

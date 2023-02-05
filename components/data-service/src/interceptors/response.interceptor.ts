@@ -23,19 +23,11 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
       map((data) => {
         const ctx = context.switchToHttp();
         const request = ctx.getRequest<Request>();
-        if (request.method === 'POST') {
-          return {
-            statusCode: 201,
-            message: 'success',
-            data: data,
-          };
-        } else {
-          return {
-            statusCode: 200,
-            message: 'success',
-            data: data,
-          };
-        }
+        return {
+          statusCode: 200,
+          message: 'success',
+          data: data.prices,
+        };
       }),
     );
   }
