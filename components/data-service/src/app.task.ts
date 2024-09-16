@@ -13,7 +13,6 @@ export class AppTask implements OnModuleInit {
     console.log('Cron task');
     await this.updateCrytoData();
   }
-
   async onModuleInit() {
     await this.updateCrytoData();
   }
@@ -28,7 +27,7 @@ export class AppTask implements OnModuleInit {
       for (let j = 0; j < numberOfDays.length; j++) {
         const coinId = data[i].id;
         //const currentcy = 'usd';
-        // 7 days
+        // update daily
         const numberOfDay = numberOfDays[j];
         const tmp_url =
           'https://api.coingecko.com/api/v3/coins/' +
